@@ -53,21 +53,14 @@ jobs:
           # fallback for search-card decoration instead of the iOS 26 tint.
           python3 - <<'PY'
           from pathlib import Path
+          import re
           path = Path('upstream/tweak/Sources/Redesigned/Search/SearchCards.x')
           text = path.read_text()
-          old = '''    if (@available(iOS 26.0, *)) {
-        if (parts.glass) {
-            UIGlassEffect *effect = [UIGlassEffect effectWithStyle:UIGlassEffectStyleClear];
-            effect.tintColor = [color colorWithAlphaComponent:kTintAlpha];
-            parts.glass.effect = effect;
-        }
-    }
-'''
-          replacement = '''    if (parts.glass) parts.glass.effect = SGGlassEffect();
-'''
-          if old not in text:
+          pattern = r'    if \(@available\(iOS 26\.0, \*\)\) \{\n        if \(parts\.glass\) \{\n            UIGlassEffect \*effect = \[UIGlassEffect effectWithStyle:UIGlassEffectStyleClear\];\n            effect\.tintColor = \[color colorWithAlphaComponent:kTintAlpha\];\n            parts\.glass\.effect = effect;\n        \}\n    \}\n'
+          text, count = re.subn(pattern, '    if (parts.glass) parts.glass.effect = SGGlassEffect();\\n', text, count=1)
+          if count != 1:
               raise SystemExit('expected SearchCards visual block was not found')
-          path.write_text(text.replace(old, replacement, 1))
+          path.write_text(text)
           PY
 
       - name: Compile patched dylib
