@@ -25,13 +25,11 @@ jobs:
           git clone https://github.com/skopevoj/spoti.pw.git upstream
           git -C upstream checkout 02762ed1a08136c32fe9dba6c6492cf31e42b839
           cp tweak/Sources/Shared/Sing/SGSingModel.m upstream/tweak/Sources/Shared/Sing/SGSingModel.m
+          cp compat/SGGlass.m upstream/tweak/Sources/Core/SGGlass.m
           # Xcode 26 is not installed on the runner.  The iOS 26-only glass
           # button selector is unrelated to Sing, so use the supported
           # fallback configuration while compiling this target.
           sed -i '' 's/\[UIButtonConfiguration prominentGlassButtonConfiguration\]/[UIButtonConfiguration filledButtonConfiguration]/' upstream/tweak/Sources/App/Onboarding/Tour.m
-          # `capsuleConfiguration` is another iOS 26-only declaration absent
-          # from the runner SDK.  The runtime already falls back to CALayer.
-          sed -i '' 's/shape = \[config capsuleConfiguration\];/shape = nil;/' upstream/tweak/Sources/Core/SGGlass.m
 
       - name: Compile patched dylib
         run: |
