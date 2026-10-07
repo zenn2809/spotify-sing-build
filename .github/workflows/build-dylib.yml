@@ -27,6 +27,7 @@ jobs:
           cp tweak/Sources/Shared/Sing/SGSingModel.m upstream/tweak/Sources/Shared/Sing/SGSingModel.m
           cp compat/SGGlass.m upstream/tweak/Sources/Core/SGGlass.m
           cp compat/EdgeEffect.x upstream/tweak/Sources/Native/Appearance/EdgeEffect.x
+          cp compat/EdgeEffect.x upstream/tweak/Sources/Redesigned/Kit/SGREdgeEffect.x
           # Xcode 26 is not installed on the runner.  The iOS 26-only glass
           # button selector is unrelated to Sing, so use the supported
           # fallback configuration while compiling this target.
