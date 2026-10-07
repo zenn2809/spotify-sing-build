@@ -25,6 +25,7 @@ jobs:
           git clone https://github.com/skopevoj/spoti.pw.git upstream
           git -C upstream checkout 02762ed1a08136c32fe9dba6c6492cf31e42b839
           cp tweak/Sources/Shared/Sing/SGSingModel.m upstream/tweak/Sources/Shared/Sing/SGSingModel.m
+          grep -F 'https://huggingface.co/ralphguu/spotify-sing-model/resolve/main/' upstream/tweak/Sources/Shared/Sing/SGSingModel.m
           cp compat/SGGlass.m upstream/tweak/Sources/Core/SGGlass.m
           cp compat/EdgeEffect.x upstream/tweak/Sources/Native/Appearance/EdgeEffect.x
           cp compat/EdgeEffect.x upstream/tweak/Sources/Redesigned/Kit/SGREdgeEffect.x
@@ -48,6 +49,26 @@ jobs:
           # message send when compiling against the runner's older SDK; the
           # transition still uses the pane's regular CALayer corner radius.
           sed -i '' '/setCornerConfiguration:.*cornerConfiguration/d' upstream/tweak/Sources/Redesigned/NowPlayingBar/BarTransition.x
+          # The runner lacks UIGlassEffect. Use the existing supported glass
+          # fallback for search-card decoration instead of the iOS 26 tint.
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('upstream/tweak/Sources/Redesigned/Search/SearchCards.x')
+          text = path.read_text()
+          old = '''    if (@available(iOS 26.0, *)) {
+        if (parts.glass) {
+            UIGlassEffect *effect = [UIGlassEffect effectWithStyle:UIGlassEffectStyleClear];
+            effect.tintColor = [color colorWithAlphaComponent:kTintAlpha];
+            parts.glass.effect = effect;
+        }
+    }
+'''
+          replacement = '''    if (parts.glass) parts.glass.effect = SGGlassEffect();
+'''
+          if old not in text:
+              raise SystemExit('expected SearchCards visual block was not found')
+          path.write_text(text.replace(old, replacement, 1))
+          PY
 
       - name: Compile patched dylib
         run: |
