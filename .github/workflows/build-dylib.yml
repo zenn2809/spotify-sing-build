@@ -28,6 +28,14 @@ jobs:
           cp compat/SGGlass.m upstream/tweak/Sources/Core/SGGlass.m
           cp compat/EdgeEffect.x upstream/tweak/Sources/Native/Appearance/EdgeEffect.x
           cp compat/EdgeEffect.x upstream/tweak/Sources/Redesigned/Kit/SGREdgeEffect.x
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('upstream/tweak/Sources/Redesigned/Lyrics/SGRSingControl.m')
+          text = path.read_text()
+          start = text.index('        if (@available(iOS 26.0, *)) {', text.index('UIVisualEffectView *pane'))
+          end = text.index('        content = pane.contentView;', start)
+          path.write_text(text[:start] + text[end:])
+          PY
           # Xcode 26 is not installed on the runner.  The iOS 26-only glass
           # button selector is unrelated to Sing, so use the supported
           # fallback configuration while compiling this target.
