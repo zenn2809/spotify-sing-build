@@ -30,6 +30,9 @@ jobs:
           cp compat/EdgeEffect.x upstream/tweak/Sources/Native/Appearance/EdgeEffect.x
           cp compat/EdgeEffect.x upstream/tweak/Sources/Redesigned/Kit/SGREdgeEffect.x
           cp compat/LockScreenArtwork.m upstream/tweak/Sources/Shared/LockScreenArtwork/LockScreenArtwork.m
+          # Construct the iOS 26-only artwork class by name, so Xcode 16.4's
+          # iOS 18 SDK can compile the optional lock-screen hook.
+          sed -i '' 's/\[\[MPMediaItemAnimatedArtwork alloc\]/[[NSClassFromString(@"MPMediaItemAnimatedArtwork") alloc]/' upstream/tweak/Sources/Shared/LockScreenArtwork/LockScreenArtwork.x
           python3 - <<'PY'
           from pathlib import Path
           path = Path('upstream/tweak/Sources/Redesigned/Lyrics/SGRSingControl.m')
