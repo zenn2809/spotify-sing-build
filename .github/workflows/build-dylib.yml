@@ -44,9 +44,10 @@ jobs:
           # Sing's model and playback pipeline are unaffected.
           sed -i '' 's/\[UIButtonConfiguration prominentGlassButtonConfiguration\]/[UIButtonConfiguration filledButtonConfiguration]/' upstream/tweak/Sources/App/Onboarding/Tour.m
           sed -i '' 's/\[UIButtonConfiguration glassButtonConfiguration\]/[UIButtonConfiguration filledButtonConfiguration]/' upstream/tweak/Sources/Redesigned/Lyrics/SGRKaraokeView.m
-          # These iOS 26-only selectors are guarded at runtime in the source,
-          # but an older SDK still type-checks their direct message sends.
-          sed -i '' 's/\[glass setCornerConfiguration:\[(id)pane cornerConfiguration\]\]/[(id)glass setCornerConfiguration:[(id)pane cornerConfiguration]]/' upstream/tweak/Sources/Redesigned/NowPlayingBar/BarTransition.x
+          # This copies an iOS 26 visual-only corner setting.  Remove that
+          # message send when compiling against the runner's older SDK; the
+          # transition still uses the pane's regular CALayer corner radius.
+          sed -i '' '/setCornerConfiguration:.*cornerConfiguration/d' upstream/tweak/Sources/Redesigned/NowPlayingBar/BarTransition.x
 
       - name: Compile patched dylib
         run: |
