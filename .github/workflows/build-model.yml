@@ -1,0 +1,51 @@
+name: Build Sing Core ML model
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Core ML compilation is Apple's toolchain; this is an Apple Silicon hosted macOS runner.
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install conversion dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'numpy<2.3' torch==2.9.0 coremltools==9.0 einops==0.6.1 beartype==0.14.1 rotary-embedding-torch==0.3.5 librosa pyyaml
+
+      - name: Fetch pinned sources, checkpoint, and goldens
+        run: |
+          git clone https://github.com/john-rocky/coreai-model-zoo.git zoo
+          git -C zoo checkout 5029e6df8100650fe175d3e276fffb0177754ca1
+          git clone https://github.com/KimberleyJensen/Mel-Band-Roformer-Vocal-Model.git ref
+          git -C ref checkout 25f44ffb55ee3c301281bba21b2d6d311cb69ae2
+          curl --fail --location --retry 4 --retry-all-errors --output MelBandRoformer.ckpt 'https://huggingface.co/KimberleyJSN/melbandroformer/resolve/ac9b0614ab3cd7f77219e18ba494dfd93956c348/MelBandRoformer.ckpt'
+          python harness/sing/fetch_goldens.py --output build/goldens
+
+      - name: Export and compile model
+        run: python harness/sing/export_coreml.py zoo ref MelBandRoformer.ckpt build/goldens/golden_raw.f32 export --unpinned-tools
+
+      - name: Stage verified host files
+        run: python harness/sing/stage_model.py export/separator.mlmodelc model-host-files | tee model-manifest.txt
+
+      - name: Upload model-host artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sing-model-host-files
+          path: |
+            model-host-files
+            model-manifest.txt
+          if-no-files-found: error
+          retention-days: 7
