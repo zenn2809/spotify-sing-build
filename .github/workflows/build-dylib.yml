@@ -39,7 +39,11 @@ jobs:
           # Xcode 26 is not installed on the runner.  The iOS 26-only glass
           # button selector is unrelated to Sing, so use the supported
           # fallback configuration while compiling this target.
+          # The iOS 26 glass-button selectors appear in two visual-only
+          # settings screens.  Use the supported fallback on this runner;
+          # Sing's model and playback pipeline are unaffected.
           sed -i '' 's/\[UIButtonConfiguration prominentGlassButtonConfiguration\]/[UIButtonConfiguration filledButtonConfiguration]/' upstream/tweak/Sources/App/Onboarding/Tour.m
+          sed -i '' 's/\[UIButtonConfiguration glassButtonConfiguration\]/[UIButtonConfiguration filledButtonConfiguration]/' upstream/tweak/Sources/Redesigned/Lyrics/SGRKaraokeView.m
 
       - name: Compile patched dylib
         run: |
