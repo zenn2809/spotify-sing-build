@@ -35,6 +35,36 @@ jobs:
           sed -i '' 's/\[\[MPMediaItemAnimatedArtwork alloc\]/[[NSClassFromString(@"MPMediaItemAnimatedArtwork") alloc]/' upstream/tweak/Sources/Shared/LockScreenArtwork/LockScreenArtwork.x
           python3 - <<'PY'
           from pathlib import Path
+          import re
+          path = Path('upstream/tweak/Sources/Shared/LockScreenArtwork/LockScreenArtwork.x')
+          text = path.read_text()
+          text = text.replace('#import <MediaPlayer/MediaPlayer.h>', '#import <MediaPlayer/MediaPlayer.h>\n#import <objc/message.h>', 1)
+          pattern = r'static id artworkFor\(NSString \*artworkID, NSURL \*file, UIImage \*still\) \{.*?\n\}\n\n// Every credited artist'
+          replacement = '''static id artworkFor(NSString *artworkID, NSURL *file, UIImage *still) {
+              if (!SGAnimatedArtworkAvailable()) return nil;
+              Class artworkClass = NSClassFromString(@"MPMediaItemAnimatedArtwork");
+              SEL initializer = NSSelectorFromString(@"initWithArtworkID:previewImageRequestHandler:videoAssetFileURLRequestHandler:");
+              if (!artworkClass || ![artworkClass instancesRespondToSelector:initializer]) return nil;
+              id object = ((id (*)(id, SEL))objc_msgSend)(artworkClass, @selector(alloc));
+              id preview = ^(CGSize size, void (^done)(UIImage *image)) {
+                  SGLog(@"lock artwork: still asked at %.0fx%.0f", size.width, size.height);
+                  done(filled(still ?: coverImage(size), size));
+              };
+              id video = ^(CGSize size, void (^done)(NSURL *url)) {
+                  SGLog(@"lock artwork: clip asked at %.0fx%.0f", size.width, size.height);
+                  done(file);
+              };
+              return ((id (*)(id, SEL, id, id, id))objc_msgSend)(object, initializer, artworkID, preview, video);
+          }
+
+          // Every credited artist'''
+          text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('expected lock-screen artwork constructor was not found')
+          path.write_text(text)
+          PY
+          python3 - <<'PY'
+          from pathlib import Path
           path = Path('upstream/tweak/Sources/Redesigned/Lyrics/SGRSingControl.m')
           text = path.read_text()
           start = text.index('        if (@available(iOS 26.0, *)) {', text.index('UIVisualEffectView *pane'))
