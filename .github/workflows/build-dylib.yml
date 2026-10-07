@@ -1,0 +1,41 @@
+name: Build patched spotifyglass dylib
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Theos
+        run: |
+          brew install make
+          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+          echo "/opt/homebrew/opt/make/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Fetch source matching Spotify 9.1.78 Sing
+        run: |
+          git clone https://github.com/skopevoj/spoti.pw.git upstream
+          git -C upstream checkout 02762ed1a08136c32fe9dba6c6492cf31e42b839
+          cp tweak/Sources/Shared/Sing/SGSingModel.m upstream/tweak/Sources/Shared/Sing/SGSingModel.m
+
+      - name: Compile patched dylib
+        run: |
+          gmake -C upstream/tweak package FINALPACKAGE=1
+          cp upstream/tweak/.theos/obj/arm64/spotifyglass.dylib spotifyglass.dylib
+          file spotifyglass.dylib
+
+      - name: Upload patched dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotifyglass-patched-dylib
+          path: spotifyglass.dylib
+          if-no-files-found: error
+          retention-days: 7
