@@ -29,6 +29,9 @@ jobs:
           # button selector is unrelated to Sing, so use the supported
           # fallback configuration while compiling this target.
           sed -i '' 's/\[UIButtonConfiguration prominentGlassButtonConfiguration\]/[UIButtonConfiguration filledButtonConfiguration]/' upstream/tweak/Sources/App/Onboarding/Tour.m
+          # `capsuleConfiguration` is another iOS 26-only declaration absent
+          # from the runner SDK.  The runtime already falls back to CALayer.
+          sed -i '' 's/shape = \[config capsuleConfiguration\];/shape = nil;/' upstream/tweak/Sources/Core/SGGlass.m
 
       - name: Compile patched dylib
         run: |
