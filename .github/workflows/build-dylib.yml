@@ -62,6 +62,7 @@ jobs:
               raise SystemExit('expected SearchCards visual block was not found')
           path.write_text(text)
           PY
+          sed -i '' '/static const CGFloat kTintAlpha = 0.35;/d' upstream/tweak/Sources/Redesigned/Search/SearchCards.x
 
       - name: Compile patched dylib
         run: |
