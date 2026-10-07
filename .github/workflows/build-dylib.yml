@@ -29,6 +29,7 @@ jobs:
           cp compat/SGGlass.m upstream/tweak/Sources/Core/SGGlass.m
           cp compat/EdgeEffect.x upstream/tweak/Sources/Native/Appearance/EdgeEffect.x
           cp compat/EdgeEffect.x upstream/tweak/Sources/Redesigned/Kit/SGREdgeEffect.x
+          cp compat/LockScreenArtwork.m upstream/tweak/Sources/Shared/LockScreenArtwork/LockScreenArtwork.m
           python3 - <<'PY'
           from pathlib import Path
           path = Path('upstream/tweak/Sources/Redesigned/Lyrics/SGRSingControl.m')
