@@ -1,0 +1,31 @@
+name: Build AutoMix iOS sample
+
+on:
+  push:
+    paths:
+      - "automix-core/**"
+      - "automix-ios-sample/**"
+      - ".github/workflows/build-automix-ios-sample.yml"
+  pull_request:
+    paths:
+      - "automix-core/**"
+      - "automix-ios-sample/**"
+      - ".github/workflows/build-automix-ios-sample.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build for an iOS Simulator without signing
+        run: >-
+          xcodebuild
+          -project automix-ios-sample/AutoMixSample.xcodeproj
+          -scheme AutoMixSample
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
