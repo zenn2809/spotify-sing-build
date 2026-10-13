@@ -1,0 +1,27 @@
+name: Test AutoMix core
+
+on:
+  push:
+    paths:
+      - "automix-core/**"
+      - ".github/workflows/test-automix-core.yml"
+  pull_request:
+    paths:
+      - "automix-core/**"
+      - ".github/workflows/test-automix-core.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run the AutoMix core tests
+        run: >-
+          cc -std=c11 -Wall -Wextra -Werror
+          -Iautomix-core/include
+          automix-core/src/SGAutoMixCore.c
+          automix-core/tests/test_automix_core.c
+          -lm -o automix-core-tests && ./automix-core-tests
