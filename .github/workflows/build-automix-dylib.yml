@@ -1,0 +1,45 @@
+name: Build SGAutoMix dylib
+
+on:
+  push:
+    paths:
+      - "automix-core/**"
+      - "automix-dylib/**"
+      - ".github/workflows/build-automix-dylib.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build arm64 iOS dynamic library
+        run: |
+          mkdir -p build
+          SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos clang \
+            -arch arm64 \
+            -miphoneos-version-min=17.0 \
+            -isysroot "$SDKROOT" \
+            -dynamiclib \
+            -Iautomix-core/include \
+            -Iautomix-dylib/include \
+            automix-core/src/SGAutoMixCore.c \
+            automix-dylib/src/SGAutoMixExports.c \
+            -Wl,-install_name,@rpath/SGAutoMix.dylib \
+            -lm \
+            -o build/SGAutoMix.dylib
+      - name: Verify the device architecture
+        run: |
+          test "$(lipo -archs build/SGAutoMix.dylib)" = "arm64"
+          otool -hv build/SGAutoMix.dylib
+      - name: Upload unsigned device dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: SGAutoMix-iOS-arm64
+          path: build/SGAutoMix.dylib
+          if-no-files-found: error
+          retention-days: 30
